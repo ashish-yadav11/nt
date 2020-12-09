@@ -14,7 +14,7 @@ install: nt
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	install -m 0755 nt ${DESTDIR}${PREFIX}/bin/nt
 	install -m 0755 ntq.sh ${DESTDIR}${PREFIX}/bin/ntq
-	ln -sf /usr/bin/atrm ${DESTDIR}${PREFIX}/bin/ntrm
+	install -m 0755 ntrm.sh ${DESTDIR}${PREFIX}/bin/ntrm
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/nt ${DESTDIR}${PREFIX}/bin/ntq ${DESTDIR}${PREFIX}/bin/ntrm
