@@ -100,10 +100,10 @@ parseatarg(char *arg, char *colon, char *atarg)
 int
 parsetime(char *arg, unsigned int *t)
 {
-        int last = None;
-        unsigned int i = 0;
+        int last;
+        unsigned int i;
 
-        for (; *arg != '\0'; arg++) {
+        for (last = None, *t = 0, i = 0; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
                         i = 10 * i + *arg - '0';
                         continue;
