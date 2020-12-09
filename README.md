@@ -14,6 +14,8 @@ day.
 ```
 nt -h|--help
 nt <time-specification> <notification>
+ntq
+ntrm <id>
 ```
 
 ## time-specification
