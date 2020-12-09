@@ -35,108 +35,112 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 
 enum { None, Period, Comma, Second, Minute, Hour };
 
-/* the following function assumes n >= 1 */
-char *
-catarray(int n, char *array[])
+/* the following function assumes size >= 1 */
+int
+setntenv(int size, char *array[])
 {
         char *c;
         char *buf;
-        int t = 0;
-        int l[n];
+        int len[size];
+        int sum = 0;
 
-        for (int i = 0; i < n; i++)
-                t += l[i] = strlen(array[i]);
-        c = buf = malloc((t + n) * sizeof(char));
-        memcpy(c, array[0], l[0]);
-        c += l[0];
-        for (int i = 1; i < n; c += l[i], i++) {
+        for (int i = 0; i < size; i++)
+                sum += len[i] = strlen(array[i]);
+        if (!sum)
+                return 0;
+        c = buf = malloc((sum + size) * sizeof(char));
+        memcpy(c, array[0], len[0]);
+        c += len[0];
+        for (int i = 1; i < size; c += len[i], i++) {
                 *(c++) = ' ';
-                memcpy(c, array[i], l[i]);
+                memcpy(c, array[i], len[i]);
         }
         *c = '\0';
-        return buf;
+        setenv("NT_MESSAGE", buf, 1);
+        free(buf);
+        return 1;
 }
 
-/* the following function assumes that t points to a buffer of length >= 5 */
+/* the following function assumes that atarg points to a buffer of length >= 5 */
 int
-parseatarg(char *a, char *c, char *t)
+parseatarg(char *arg, char *colon, char *atarg)
 {
-        switch (c - a) {
+        switch (colon - arg) {
                 case 0:
-                        t[0] = t[1] = '0';
+                        atarg[0] = atarg[1] = '0';
                         break;
                 case 1:
-                        if (!ISDIGIT(a[0]))
+                        if (!ISDIGIT(arg[0]))
                                 return 0;
-                        t[0] = '0', t[1] = a[0];
+                        atarg[0] = '0', atarg[1] = arg[0];
                         break;
                 case 2:
-                        if (!ISDIGIT(a[0]) || !ISDIGIT(a[1]))
+                        if (!ISDIGIT(arg[0]) || !ISDIGIT(arg[1]))
                                 return 0;
-                        t[0] = a[0], t[1] = a[1];
+                        atarg[0] = arg[0], atarg[1] = arg[1];
                         break;
                 default:
                         return 0;
         }
-        if (ISDIGIT(c[1])) {
-                if (ISDIGIT(c[2]))
-                        t[2] = c[1], t[3] = c[2];
-                else if (c[2] == '\0')
-                        t[2] = '0', t[3] = c[1];
+        if (ISDIGIT(colon[1])) {
+                if (ISDIGIT(colon[2]))
+                        atarg[2] = colon[1], atarg[3] = colon[2];
+                else if (colon[2] == '\0')
+                        atarg[2] = '0', atarg[3] = colon[1];
                 else
                         return 0;
-        } else if (c[1] == '\0')
-                t[2] = t[3] = '0';
+        } else if (colon[1] == '\0')
+                atarg[2] = atarg[3] = '0';
         else
                 return 0;
-        t[4] = '\0';
+        atarg[4] = '\0';
         return 1;
 }
 
 int
-parsetime(char *a, unsigned int *t)
+parsetime(char *arg, unsigned int *t)
 {
-        int r = None;
+        int last = None;
         unsigned int i = 0;
 
-        for (; *a != '\0'; a++) {
-                if (ISDIGIT(*a)) {
-                        i = 10 * i + *a - '0';
+        for (; *arg != '\0'; arg++) {
+                if (ISDIGIT(*arg)) {
+                        i = 10 * i + *arg - '0';
                         continue;
                 }
-                switch (*a) {
+                switch (*arg) {
                         case ',':
-                                if (r != None)
+                                if (last != None)
                                         return 0;
-                                r = Comma;
-                                *t = 60 * i;
-                                i = 0;
-                                break;
-                        case '.':
-                                if (r != None && r != Comma)
-                                        return 0;
-                                r = Period;
+                                last = Comma;
                                 *t = 60 * (*t + i);
                                 i = 0;
                                 break;
-                        case 'h':
-                                if (r != None)
+                        case '.':
+                                if (last != None && last != Comma)
                                         return 0;
-                                r = Hour;
+                                last = Period;
+                                *t = 60 * i;
+                                i = 0;
+                                break;
+                        case 'h':
+                                if (last != None)
+                                        return 0;
+                                last = Hour;
                                 *t = 60 * 60 * i;
                                 i = 0;
                                 break;
                         case 'm':
-                                if (r != None && r != Hour)
+                                if (last != None && last != Hour)
                                         return 0;
-                                r = Minute;
+                                last = Minute;
                                 *t += 60 * i;
                                 i = 0;
                                 break;
                         case 's':
-                                if (r != None && r != Hour && r != Minute)
+                                if (last != None && last != Hour && last != Minute)
                                         return 0;
-                                r = Second;
+                                last = Second;
                                 *t += i;
                                 i = 0;
                                 break;
@@ -144,7 +148,7 @@ parsetime(char *a, unsigned int *t)
                                 return 0;
                 }
         }
-        switch (r) {
+        switch (last) {
                 case None:
                         *t = 60 * i;
                         break;
@@ -163,19 +167,17 @@ parsetime(char *a, unsigned int *t)
 }
 
 void
-callat(time_t t, char *atarg, char *nt)
+callat(time_t t, char *atarg)
 {
         int fdr[2], fdw[2];
 
         if (pipe(fdr) == -1 || pipe(fdw) == -1) {
                 perror("callat - pipe");
-                free(nt);
                 exit(1);
         }
         switch (fork()) {
                 case -1:
                         perror("callat - fork");
-                        free(nt);
                         exit(1);
                 case 0:
                 {
@@ -186,7 +188,6 @@ callat(time_t t, char *atarg, char *nt)
                         if (fdw[0] != STDIN_FILENO) {
                                 if (dup2(fdw[0], STDIN_FILENO) != STDIN_FILENO) {
                                         perror("callat - child - dup2");
-                                        free(nt);
                                         exit(1);
                                 }
                                 close(fdw[0]);
@@ -194,14 +195,12 @@ callat(time_t t, char *atarg, char *nt)
                         if (fdr[1] != STDOUT_FILENO) {
                                 if (dup2(fdr[1], STDOUT_FILENO) != STDOUT_FILENO) {
                                         perror("callat - child - dup2");
-                                        free(nt);
                                         exit(1);
                                 }
                                 close(fdr[1]);
                         }
                         if (dup2(STDOUT_FILENO, STDERR_FILENO) != STDERR_FILENO) {
                                 perror("callat - child - dup2");
-                                free(nt);
                                 exit(1);
                         }
                         execv(arg[0], arg);
@@ -219,11 +218,10 @@ callat(time_t t, char *atarg, char *nt)
                         close(fdr[1]);
                         if (t >= 0)
                                 dprintf(fdw[1], "sleep \"$(( %jd - $(date +%%s) ))\"\n"
-                                                "notify-send -t 0 '%s'", (intmax_t)t, nt);
+                                                "notify-send -t 0 \"$NT_MESSAGE\"", (intmax_t)t);
                         else
-                                dprintf(fdw[1], "notify-sned -t 0 '%s'", nt);
+                                dprintf(fdw[1], "notify-send -t 0 \"$NT_MESSAGE\"");
                         close(fdw[1]);
-                        free(nt);
                         if (!(stream = fdopen(fdr[0], "r"))) {
                                 close(fdr[0]);
                                 perror("callat - fdopen");
@@ -252,7 +250,6 @@ main(int argc, char *argv[])
 {
         unsigned int t;
         char *c;
-        char *nt;
 
         if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
                 puts(USAGE);
@@ -262,27 +259,24 @@ main(int argc, char *argv[])
                 fputs("nt: not enough arguments\n" USAGE "\n", stderr);
                 return 2;
         }
-        nt = catarray(argc - 2, argv + 2);
-        if (nt[0] == '\0') {
+        if (!setntenv(argc - 2, argv + 2)) {
                 fputs("nt: notification can't be an empty string\n", stderr);
-                free(nt);
                 return 2;
         }
         if ((c = strchr(argv[1], ':'))) {
                 char atarg[5];
 
                 if (parseatarg(argv[1], c, atarg)) {
-                        callat(-1, atarg, nt);
+                        callat(-1, atarg);
                         return 0;
                 }
         } else if (parsetime(argv[1], &t)) {
                 char atarg[25];
 
                 snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60);
-                callat(time(NULL) + t, atarg, nt);
+                callat(time(NULL) + t, atarg);
                 return 0;
         }
         fputs("nt: invalid time specification\n" USAGE "\n", stderr);
-        free(nt);
         return 2;
 }
