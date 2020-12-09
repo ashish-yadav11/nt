@@ -264,7 +264,7 @@ main(int argc, char *argv[])
                 return 2;
         }
         if ((c = strchr(argv[1], ':'))) {
-                char atarg[5];
+                char atarg[6];
 
                 if (parseatarg(argv[1], c, atarg)) {
                         callat(-1, atarg);
