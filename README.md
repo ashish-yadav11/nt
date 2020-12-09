@@ -1,7 +1,7 @@
 # nt
 
-'at' wrapper for setting one time notification alarms. alarms can be set after
-a provided time interval with seconds precision or at a provided time within a
+'at' wrapper for setting one time notification alarms. Alarms can be set after
+a specific time interval with upto seconds precision or at some time within a
 day.
 
 # Dependencies
