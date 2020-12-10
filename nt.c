@@ -33,6 +33,7 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
+/* last special token in time specification */
 enum { None, Period, Comma, Second, Minute, Hour };
 
 /* the following function assumes size >= 1 */
@@ -42,13 +43,13 @@ setntenv(int size, char *array[])
         char *c;
         char *buf;
         int len[size];
-        int sum = 0;
+        int sumlen = 0;
 
         for (int i = 0; i < size; i++)
-                sum += len[i] = strlen(array[i]);
-        if (!sum)
+                sumlen += len[i] = strlen(array[i]);
+        if (!sumlen)
                 return 0;
-        c = buf = malloc((sum + size) * sizeof(char));
+        c = buf = malloc(sumlen + size);
         memcpy(c, array[0], len[0]);
         c += len[0];
         for (int i = 1; i < size; c += len[i], i++) {
