@@ -257,7 +257,7 @@ callat(time_t t, char *atarg)
                                 if (f && strcmp(line, UNWANTEDATWARNLINE) == 0)
                                         f = 0;
                                 else if (t >= 0 && sscanf(line, "job %jd", &id) == 1) {
-                                        printf("job %jd at %s", id, ctime(&t));
+                                        printf("id: %jd, scheduled at: %s", id, ctime(&t));
                                         t = -1;
                                 } else
                                         fputs(line, stdout);
