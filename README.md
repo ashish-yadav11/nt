@@ -44,5 +44,5 @@ Clone the repository and run
 cd nt
 make install clean
 ```
-Make sure that `$HOME/.local/bin` is in the PATH environment variable, as it is
-the default installation destination ([Makefile](Makefile)).
+> Make sure that `$HOME/.local/bin` is in your PATH environment variable, as it
+> is the default installation destination ([Makefile](Makefile)).
