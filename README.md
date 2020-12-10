@@ -25,6 +25,11 @@ ntq
 ntrm -a|<id>
 ```
 
+## time-specification
+
+* relative - `[H,]M[.S]` or `[Hh][Mm][Ss]`
+* absolute - `[HH]:[MM]`
+
 ## ntq
 
 List pending notification alarms.
@@ -33,11 +38,6 @@ List pending notification alarms.
 
 * `ntrm -a` - remove all pending notification alarms.
 * `ntrm <id>` - remove pending notificaiton alarm with id `<id>`.
-
-## time-specification
-
-* relative - `[H,]M[.S]` or `[Hh][Mm][Ss]`
-* absolute - `[HH]:[MM]`
 
 ## Examples
 
