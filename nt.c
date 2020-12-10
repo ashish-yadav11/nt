@@ -113,14 +113,14 @@ parsetime(char *arg, unsigned int *t)
                                 if (last != None)
                                         return 0;
                                 last = Comma;
-                                *t = 60 * (*t + i);
+                                *t = 60 * 60 * i;
                                 i = 0;
                                 break;
                         case '.':
                                 if (last != None && last != Comma)
                                         return 0;
                                 last = Period;
-                                *t = 60 * i;
+                                *t += 60 * i;
                                 i = 0;
                                 break;
                         case 'h':
