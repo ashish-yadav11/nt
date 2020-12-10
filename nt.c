@@ -12,6 +12,8 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 #include <time.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #define USAGE \
         "Usage:\n" \
         "	nt -h|--help\n" \
@@ -25,11 +27,14 @@ gcc -o nt -O3 -Wall -Wextra nt.c
         "	nt 30s '30 seconds up'\n" \
         "	nt 1, '1 hour up'\n" \
         "	nt 5.30 '5 minutes 30 seconds up'\n" \
+        "	nt 2h5s '2 hours 5 seconds up'\n" \
         "	nt .10 '10 seconds up'\n" \
         "	nt 1,10 '1 hour 10 minutes up'\n" \
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
         "	nt :5 '00:05 up'"
+
+#define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
@@ -49,7 +54,11 @@ setntenv(int size, char *array[])
                 sumlen += len[i] = strlen(array[i]);
         if (!sumlen)
                 return 0;
-        c = buf = malloc(sumlen + size);
+        if (!(buf = malloc(sumlen + size))) {
+                perror("setntenv - malloc");
+                exit(1);
+        }
+        c = buf;
         memcpy(c, array[0], len[0]);
         c += len[0];
         for (int i = 1; i < size; c += len[i], i++) {
@@ -57,7 +66,10 @@ setntenv(int size, char *array[])
                 memcpy(c, array[i], len[i]);
         }
         *c = '\0';
-        setenv("NT_MESSAGE", buf, 1);
+        if (setenv("NT_MESSAGE", buf, 1) == -1) {
+                perror("setntenv - setenv");
+                exit(1);
+        }
         free(buf);
         return 1;
 }
@@ -217,11 +229,23 @@ callat(time_t t, char *atarg)
 
                         close(fdw[0]);
                         close(fdr[1]);
-                        if (t >= 0)
-                                dprintf(fdw[1], "sleep \"$(( %jd - $(date +%%s) ))\"\n"
-                                                "notify-send -t 0 \"$NT_MESSAGE\"", (intmax_t)t);
-                        else
-                                dprintf(fdw[1], "notify-send -t 0 \"$NT_MESSAGE\"");
+                        if (t >= 0) {
+                                int fd;
+                                char tmp[] = "/var/tmp/nt-XXXXXX";
+
+                                if ((fd = mkstemp(tmp)) == -1) {
+                                        perror("callat - mkstemp");
+                                        exit(1);
+                                }
+                                close(fd);
+                                dprintf(fdw[1], "NT_PIDFILE=%s\n"
+                                                "echo \"$$\" >\"$NT_PIDFILE\"\n"
+                                                "sleep \"$(( %jd - $(date +%%s) ))\"\n"
+                                                "%s \"$NT_MESSAGE\"\n"
+                                                "rm -f \"$NT_PIDFILE\"",
+                                                        tmp, (intmax_t)t, NOTIFY);
+                        } else
+                                dprintf(fdw[1], "%s \"$NT_MESSAGE\"", NOTIFY);
                         close(fdw[1]);
                         if (!(stream = fdopen(fdr[0], "r"))) {
                                 close(fdr[0]);
@@ -230,7 +254,7 @@ callat(time_t t, char *atarg)
                         }
                         f = 1;
                         while (fgets(line, sizeof line, stream))
-                                if (f && strcmp(line, "warning: commands will be executed using /bin/sh\n") == 0)
+                                if (f && strcmp(line, UNWANTEDATWARNLINE) == 0)
                                         f = 0;
                                 else if (t >= 0 && sscanf(line, "job %jd", &id) == 1) {
                                         printf("job %jd at %s", id, ctime(&t));

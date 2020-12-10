@@ -4,8 +4,11 @@ PREFIX = ${HOME}/.local
 CC = gcc
 CFLAGS = -O3 -Wall -Werror
 
-nt: nt.c
+nt: nt.c config.h
 	${CC} -o $@ ${CFLAGS} $<
+
+config.h:
+	cp config.def.h config.h
 
 clean:
 	rm -f nt
