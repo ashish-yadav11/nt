@@ -9,7 +9,7 @@ case $1 in
             while read -r job ; do
                 id=${job#?}
                 info=$(at -c "$id")
-                echo "$info" | grep -q "^NT_MESSAGE=" || exit
+                echo "$info" | grep -q "^NT_MESSAGE=" || continue
                 case $job in
                     =*)
                         eval "$(echo "$info" | grep "^NT_PIDFILE=")"
