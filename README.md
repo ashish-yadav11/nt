@@ -27,12 +27,12 @@ ntrm -a|<id>
 
 ## ntq
 
-list pending notification alarms
+List pending notification alarms.
 
 ## ntrm
 
-`ntrm -a` - remove all pending notification alarms
-`ntrm <id>` - remove pending notificaiton alarm with id `<id>`
+* `ntrm -a` - remove all pending notification alarms.
+* `ntrm <id>` - remove pending notificaiton alarm with id `<id>`.
 
 ## time-specification
 
