@@ -12,7 +12,7 @@ atq | LC_ALL=C sort -k6,6 -k3,3M -k4,4 -k5,5 |
             nt=$(echo "$info" | grep "^NT_MESSAGE=") || continue
             job=${job#*,}
             ur=${job#*,}
-            if t=$(echo "$info" | awk '$1=="sleep" {print $3; f=1; exit}; END {exit !f}') ; then
+            if t=$(echo "$info" | awk '$1=="sleep" {print $3; e=1; exit}; END {exit !e}') ; then
                 tm=$(LC_TIME=C date +%c -d "@$t")
             else
                 tm=${job%,*}
