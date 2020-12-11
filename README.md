@@ -6,7 +6,7 @@ day.
 
 # Configuration
 
-The command used for sending notifications can be changed in `config.h`.
+Command used for sending notifications can be configured in `config.h`.
 
 > `make`, the first time you run it, or `make config.h` will create config.h by
 > copying [config.def.h](config.def.h).

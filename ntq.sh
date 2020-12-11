@@ -1,8 +1,8 @@
 #!/bin/sh
-c_id=$(tput setaf 2)
-c_tm=$(tput setaf 3)
-c_ur=$(tput setaf 6)
-c_df=$(tput sgr0)
+cid="\033[32m"
+ctm="\033[33m"
+cur="\033[36m"
+cdf="\033[0m"
 
 atq | LC_ALL=C sort -k6,6 -k3,3M -k4,4 -k5,5 |
     awk '!x[$1] {x[$1]=1; printf "%s,%s %s %02d %s %04d,%s\n",$1,$2,$3,$4,$5,$6,$8}' |
@@ -18,7 +18,5 @@ atq | LC_ALL=C sort -k6,6 -k3,3M -k4,4 -k5,5 |
                 tm=${job%,*}
             fi
             eval "$nt"
-            printf "%s\t%s\n%s\n" \
-                "${c_id}${id}" "${c_tm}${tm} ${c_ur}${ur}${c_df}" \
-                "message: $NT_MESSAGE"
+            printf "$cid%s\t$ctm%s $cur%s$cdf\n%s\n" "$id" "$tm" "$ur" "message: $NT_MESSAGE"
         done

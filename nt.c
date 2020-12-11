@@ -36,6 +36,10 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
+#define COLORID                         "\033[32m"
+#define COLORTM                         "\033[33m"
+#define COLORDF                         "\033[0m"
+
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
 /* last special token in time specification */
@@ -257,7 +261,8 @@ callat(time_t t, char *atarg)
                                 if (f && strcmp(line, UNWANTEDATWARNLINE) == 0)
                                         f = 0;
                                 else if (t >= 0 && sscanf(line, "job %jd", &id) == 1) {
-                                        printf("id: %jd, scheduled at: %s", id, ctime(&t));
+                                        printf("id: %s%jd%s, scheduled at: %s%s%s",
+                                               COLORID, id, COLORDF, COLORTM, ctime(&t), COLORDF);
                                         t = -1;
                                 } else
                                         fputs(line, stdout);
