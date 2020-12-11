@@ -14,7 +14,8 @@ case $1 in
                     =*)
                         eval "$(echo "$info" | grep "^NT_PIDFILE=")"
                         read -r PID <"$NT_PIDFILE"
-                        /usr/bin/kill -- "-$PID"
+                        kill "$PID"
+                        pkill -P "$PID"
                         rm -f "$NT_PIDFILE"
                         ;;
                     *)

@@ -301,10 +301,14 @@ main(int argc, char *argv[])
                         return 0;
                 }
         } else if (parsetime(argv[1], &t)) {
-                char atarg[25];
+                if (t <= 60)
+                        callat(time(NULL) + t, "now");
+                else {
+                        char atarg[25];
 
-                snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60);
-                callat(time(NULL) + t, atarg);
+                        snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60 - 1);
+                        callat(time(NULL) + t, atarg);
+                }
                 return 0;
         }
         fputs("nt: invalid time specification\n" USAGE "\n", stderr);
