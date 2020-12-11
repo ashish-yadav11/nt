@@ -29,7 +29,7 @@ case $1 in
     *)
         info=$(at -c "$1" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
         echo "$info" | grep -q "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
-        if at -l | grep -q "^$1.* =" ; then
+        if at -l | grep -q "^$1.* = " ; then
             if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
                 eval "$pidline"
                 read -r PID <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
