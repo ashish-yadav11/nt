@@ -13,7 +13,7 @@ case $1 in
                 case $job in
                     =*)
                         eval "$(echo "$info" | grep "^NT_PIDFILE=")"
-                        read -r PID <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
+                        read -r PID 2>/dev/null <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
                         rm -f "$NT_PIDFILE"
                         ;;
                     *)
@@ -29,10 +29,10 @@ case $1 in
     *)
         info=$(at -c "$1" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
         echo "$info" | grep -q "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
-        if at -l | grep -q "^$1.* = " ; then
+        if at -l | awk -v id="$1" '$1==id {exit $7=="="}' ; then
             if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
                 eval "$pidline"
-                read -r PID <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
+                read -r PID 2>/dev/null <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
                 rm -f "$NT_PIDFILE"
             fi
         else
