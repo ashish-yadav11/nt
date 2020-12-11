@@ -4,7 +4,7 @@ ctm="\033[33m"
 cur="\033[36m"
 cdf="\033[0m"
 
-atq | LC_ALL=C sort -k6,6 -k3,3M -k4,4 -k5,5 |
+at -l | LC_ALL=C sort -k6,6 -k3,3M -k4,4 -k5,5 |
     awk '!x[$1] {x[$1]=1; printf "%s,%s %s %02d %s %04d,%s\n",$1,$2,$3,$4,$5,$6,$8}' |
         while read -r job ; do
             id=${job%%,*}

@@ -5,7 +5,7 @@ case $1 in
         printf "Remove all pending notification alarms (y/N):"
         read -r confirm
         [ "$confirm" != y ] && [ "$confirm" != Y ] && exit
-        atq | LC_ALL=C sort -k7,7 | awk '!x[$1] {x[$1]=1; print $7$1}' |
+        at -l | LC_ALL=C sort -k7,7 | awk '!x[$1] {x[$1]=1; print $7$1}' |
             while read -r job ; do
                 id=${job#?}
                 info=$(at -c "$id")
@@ -18,7 +18,7 @@ case $1 in
                         rm -f "$NT_PIDFILE"
                         ;;
                     *)
-                        atrm "$id"
+                        at -r "$id"
                         if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
                             eval "$pidline"
                             rm -f "$NT_PIDFILE"
@@ -30,7 +30,7 @@ case $1 in
     *)
         info=$(at -c "$1" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
         echo "$info" | grep -q "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
-        atrm "$1"
+        at -r "$1"
         if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
             eval "$pidline"
             rm -f "$NT_PIDFILE"
