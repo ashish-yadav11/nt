@@ -14,7 +14,7 @@ Command used for sending notifications can be configured in `config.h`.
 # Dependencies
 
 * at
-* a program capable of sending notifications (eg. notify-send)
+* a program capable of sending notifications (e.g. notify-send)
 
 # Usage
 
