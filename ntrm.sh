@@ -2,7 +2,7 @@
 [ "$#" -eq 0 ] && { echo "Usage: ntrm -a|<id>"; exit ;}
 case $1 in
     -a)
-        printf "Remove all pending notification alarms (y/N): "
+        printf "Remove all pending notification alarms? [y/N]: "
         read -r confirm
         [ "$confirm" != y ] && [ "$confirm" != Y ] && exit
         at -l | LC_ALL=C sort -k7,7 | awk '!x[$1] {x[$1]=1; print $7$1}' |
