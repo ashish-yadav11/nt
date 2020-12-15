@@ -301,7 +301,7 @@ main(int argc, char *argv[])
                         return 0;
                 }
         } else if (parsetime(argv[1], &t)) {
-                if (t <= 60)
+                if (t < 120)
                         callat(time(NULL) + t, "now");
                 else {
                         char atarg[25];
