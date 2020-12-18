@@ -244,7 +244,8 @@ callat(time_t t, char *atarg)
                                 close(fd);
                                 dprintf(fdw[1], "NT_PIDFILE=%s\n"
                                                 "echo \"$$\" >\"$NT_PIDFILE\"\n"
-                                                "sleep \"$(( %jd - $(date +%%s) ))\"\n"
+                                                "t=$(( %jd - $(date +%%s) ))\n"
+                                                "[ \"$t\" -gt 0 ] && sleep \"$t\"\n"
                                                 "%s \"$NT_MESSAGE\"\n"
                                                 "rm -f \"$NT_PIDFILE\"",
                                                         tmp, (intmax_t)t, NOTIFY);
