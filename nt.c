@@ -242,13 +242,12 @@ callat(time_t t, char *atarg)
                                         exit(1);
                                 }
                                 close(fd);
-                                dprintf(fdw[1], "NT_PIDFILE=%s\n"
-                                                "echo \"$$\" >\"$NT_PIDFILE\"\n"
+                                dprintf(fdw[1], "echo \"$$\" >%s\n"
                                                 "t=$(( %jd - $(date +%%s) ))\n"
                                                 "[ \"$t\" -gt 0 ] && sleep \"$t\"\n"
                                                 "%s \"$NT_MESSAGE\"\n"
-                                                "rm -f \"$NT_PIDFILE\"",
-                                                        tmp, (intmax_t)t, NOTIFY);
+                                                "rm -f %s",
+                                                        tmp, (intmax_t)t, NOTIFY, tmp);
                         } else
                                 dprintf(fdw[1], "%s \"$NT_MESSAGE\"", NOTIFY);
                         close(fdw[1]);

@@ -1,46 +1,46 @@
 #!/bin/sh
 [ "$#" -eq 0 ] && { echo "Usage: ntrm -a|<id>"; exit ;}
+
+remove_running() {
+    pidfile=$(echo "$info" | awk -F'>' '$1=="echo \"$$\" " {print $2; exit}')
+    read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID")
+    rm -f "$pidfile"
+}
+
+remove_pending() {
+    at -r "$id"
+    rm -f "$(echo "$info" | awk -F'>' '$1=="echo \"$$\" " {print $2; exit}')"
+}
+
 case $1 in
     -a)
         printf "Remove all pending notification alarms? [y/N]: "
         read -r confirm
         [ "$confirm" != y ] && [ "$confirm" != Y ] && exit
+
         at -l | LC_ALL=C sort -k7,7 | awk '!x[$1] {x[$1]=1; print $7$1}' |
             while read -r job ; do
                 id=${job#?}
                 info=$(at -c "$id")
-                echo "$info" | grep -q "^NT_MESSAGE=" || continue
+                echo "$info" | grep -q -m1 "^NT_MESSAGE=" || continue
                 case $job in
                     =*)
-                        eval "$(echo "$info" | grep "^NT_PIDFILE=")"
-                        read -r PID 2>/dev/null <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
-                        rm -f "$NT_PIDFILE"
+                        remove_running
                         ;;
                     *)
-                        at -r "$id"
-                        if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
-                            eval "$pidline"
-                            rm -f "$NT_PIDFILE"
-                        fi
+                        remove_pending
                         ;;
                 esac
         done
         ;;
     *)
-        info=$(at -c "$1" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
-        echo "$info" | grep -q "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
-        if at -l | awk -v id="$1" '$1==id {exit $7=="="}' ; then
-            if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
-                eval "$pidline"
-                read -r PID 2>/dev/null <"$NT_PIDFILE" && kill "$PID" $(pgrep -P "$PID")
-                rm -f "$NT_PIDFILE"
-            fi
+        id=$1
+        info=$(at -c "$id" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
+        echo "$info" | grep -q -m1 "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
+        if at -l | awk -v id="$id" '$1==id {exit $7!="="}' ; then
+            remove_running
         else
-            at -r "$1"
-            if pidline=$(echo "$info" | grep "^NT_PIDFILE=") ; then
-                eval "$pidline"
-                rm -f "$NT_PIDFILE"
-            fi
+            remove_pending
         fi
         ;;
 esac
