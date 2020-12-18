@@ -22,7 +22,7 @@ case $1 in
             while read -r job ; do
                 id=${job#?}
                 info=$(at -c "$id")
-                echo "$info" | grep -q -m1 "^NT_MESSAGE=" || continue
+                echo "$info" | grep -qm1 "^NT_MESSAGE=" || continue
                 case $job in
                     =*)
                         remove_running
@@ -36,7 +36,7 @@ case $1 in
     *)
         id=$1
         info=$(at -c "$id" 2>/dev/null) || { echo "ntrm: invalid id"; exit ;}
-        echo "$info" | grep -q -m1 "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
+        echo "$info" | grep -qm1 "^NT_MESSAGE=" || { echo "ntrm: invalid id"; exit ;}
         if at -l | awk -v id="$id" '$1==id {exit $7!="="}' ; then
             remove_running
         else
