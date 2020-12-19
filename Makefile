@@ -2,7 +2,7 @@
 PREFIX = ${HOME}/.local
 
 CC = gcc
-CFLAGS = -O3 -Wall -Werror
+CFLAGS = -O3 -Wall -Wextra
 
 nt: nt.c config.h
 	${CC} -o $@ ${CFLAGS} $<
