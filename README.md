@@ -1,8 +1,8 @@
 # nt
 
-'at' wrapper for setting one time notification alarms. Alarms can be set after
+`at` wrapper for setting one time notification alarms. Alarms can be set after
 a specific time interval with upto seconds precision or at some time within a
-day.
+day or using `at` supported time specification (see `man at`).
 
 # Configuration
 
@@ -20,7 +20,8 @@ Command used for sending notifications can be configured in `config.h`.
 
 ```
 nt -h|--help
-nt <time-specification> <notification>
+nt <time-specification> [<notification-message>...]
+nt -t <at-supported-time-specification> [<notification-message>...]
 ntq
 ntrm -a|<id>
 ```

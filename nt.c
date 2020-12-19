@@ -17,7 +17,8 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 #define USAGE \
         "Usage:\n" \
         "	nt -h|--help\n" \
-        "	nt <time-specification> <notification>\n" \
+        "	nt <time-specification> [<notification-message>...]\n" \
+        "	nt -t <at-supported-time-specification> [<notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
         "		relative - [H,]M[.S] or [Hh][Mm][Ss]\n" \
@@ -45,35 +46,45 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 /* last special token in time specification */
 enum { None, Period, Comma, Second, Minute, Hour };
 
+int
+getntmessage()
+{
+        char *buf = NULL;
+        size_t len = 0;
+
+        fputs(NTMESSAGEPROMPT, stdout);
+        getline(&buf, &len, stdin);
+        if (buf[0] == '\0') {
+                free(buf);
+                return 0;
+        }
+        setenv("NT_MESSAGE", buf, 1);
+        free(buf);
+        return 1;
+}
+
 /* the following function assumes size >= 1 */
 int
-setntenv(int size, char *array[])
+catntmessage(int size, char *array[])
 {
+        int i;
         char *c;
         char *buf;
-        int len[size];
-        int sumlen = 0;
+        size_t len[size];
+        size_t sumlen = 0;
 
         for (int i = 0; i < size; i++)
                 sumlen += len[i] = strlen(array[i]);
         if (!sumlen)
                 return 0;
-        if (!(buf = malloc(sumlen + size))) {
-                perror("setntenv - malloc");
-                exit(1);
-        }
-        c = buf;
-        memcpy(c, array[0], len[0]);
-        c += len[0];
-        for (int i = 1; i < size; c += len[i], i++) {
+        buf = malloc(sumlen + size);
+        memcpy(buf, array[0], len[0]);
+        for (i = 1, c = buf + len[0]; i < size; c += len[i], i++) {
                 *(c++) = ' ';
                 memcpy(c, array[i], len[i]);
         }
         *c = '\0';
-        if (setenv("NT_MESSAGE", buf, 1) == -1) {
-                perror("setntenv - setenv");
-                exit(1);
-        }
+        setenv("NT_MESSAGE", buf, 1);
         free(buf);
         return 1;
 }
@@ -227,10 +238,10 @@ callat(time_t t, char *atarg)
                 default:
                 {
                         int f;
-                        intmax_t id;
                         char *line;
                         size_t len;
                         FILE *stream;
+                        intmax_t id;
 
                         close(fdw[0]);
                         close(fdr[1]);
@@ -279,36 +290,49 @@ main(int argc, char *argv[])
         unsigned int t;
         char *c;
 
-        if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
-                puts(USAGE);
-                return 0;
-        }
-        if (argc < 3) {
+        if (argc < 2) {
                 fputs("nt: not enough arguments\n" USAGE "\n", stderr);
                 return 2;
         }
-        if (!setntenv(argc - 2, argv + 2)) {
-                fputs("nt: notification can't be an empty string\n", stderr);
-                return 2;
-        }
-        if ((c = strchr(argv[1], ':'))) {
-                char atarg[6];
-
-                if (parseatarg(argv[1], c, atarg)) {
-                        callat(-1, atarg);
-                        return 0;
-                }
-        } else if (parsetime(argv[1], &t)) {
-                if (t < 120)
-                        callat(time(NULL) + t, "now");
-                else {
-                        char atarg[25];
-
-                        snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60 - 1);
-                        callat(time(NULL) + t, atarg);
-                }
+        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+                puts(USAGE);
                 return 0;
         }
-        fputs("nt: invalid time specification\n" USAGE "\n", stderr);
-        return 2;
+        if (strcmp(argv[1], "-t") == 0) {
+                if (argc < 3) {
+                        fputs("nt: not enough arguments\n" USAGE "\n", stderr);
+                        return 2;
+                }
+                if (argc == 3 ? !getntmessage() : !catntmessage(argc - 3, argv + 3)) {
+                        fputs("nt: notification message can't be empty\n", stderr);
+                        return 2;
+                }
+                callat(-1, argv[2]);
+        } else {
+                if (argc == 2 ? !getntmessage() : !catntmessage(argc - 2, argv + 2)) {
+                        fputs("nt: notification message can't be empty\n", stderr);
+                        return 2;
+                }
+                if ((c = strchr(argv[1], ':'))) {
+                        char atarg[6];
+
+                        if (parseatarg(argv[1], c, atarg)) {
+                                callat(-1, atarg);
+                                return 0;
+                        }
+                } else if (parsetime(argv[1], &t)) {
+                        if (t < 120)
+                                callat(time(NULL) + t, "now");
+                        else {
+                                char atarg[25];
+
+                                snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60 - 1);
+                                callat(time(NULL) + t, atarg);
+                        }
+                        return 0;
+                }
+                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                return 2;
+        }
+        return 0;
 }
