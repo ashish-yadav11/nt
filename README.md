@@ -6,7 +6,8 @@ day or using `at` supported time specification (see `man at`).
 
 # Configuration
 
-Command used for sending notifications can be configured in `config.h`.
+Command used for sending notifications and prompt to use when asking for
+notification message can be configured in `config.h`.
 
 > `make`, the first time you run it, or `make config.h` will create config.h by
 > copying [config.def.h](config.def.h).
