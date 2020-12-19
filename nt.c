@@ -269,10 +269,7 @@ callat(time_t t, char *atarg)
                                         fputs(line, stdout);
                         free(line);
                         fclose(stream);
-                        if (wait(NULL) == -1) {
-                                perror("callat - wait");
-                                exit(1);
-                        }
+                        wait(NULL);
                 }
         }
 }
