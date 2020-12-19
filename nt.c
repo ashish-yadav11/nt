@@ -228,7 +228,8 @@ callat(time_t t, char *atarg)
                 {
                         int f;
                         intmax_t id;
-                        char line[128];
+                        char *line;
+                        size_t len;
                         FILE *stream;
 
                         close(fdw[0]);
@@ -256,8 +257,8 @@ callat(time_t t, char *atarg)
                                 perror("callat - fdopen");
                                 exit(1);
                         }
-                        f = 1;
-                        while (fgets(line, sizeof line, stream))
+                        f = 1, line = NULL, len = 0;
+                        while (getline(&line, &len, stream) != -1)
                                 if (f && strcmp(line, UNWANTEDATWARNLINE) == 0)
                                         f = 0;
                                 else if (t >= 0 && sscanf(line, "job %jd", &id) == 1) {
@@ -266,6 +267,7 @@ callat(time_t t, char *atarg)
                                         t = -1;
                                 } else
                                         fputs(line, stdout);
+                        free(line);
                         fclose(stream);
                         if (wait(NULL) == -1) {
                                 perror("callat - wait");
