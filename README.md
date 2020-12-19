@@ -14,8 +14,8 @@ notification message can be configured in `config.h`.
 
 # Dependencies
 
-* at
-* a program capable of sending notifications (e.g. notify-send)
+* `at`
+* a program capable of sending notifications (e.g. `notify-send`)
 
 # Usage
 
