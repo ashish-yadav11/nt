@@ -37,9 +37,9 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
-#define COLORID                         "\033[32m"
-#define COLORTM                         "\033[33m"
-#define COLORDF                         "\033[0m"
+#define CID                             "\033[32m"
+#define CTM                             "\033[33m"
+#define CDF                             "\033[0m"
 
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
@@ -195,6 +195,36 @@ parsetime(char *arg, unsigned int *t)
 }
 
 void
+filteroutput(FILE *stream, time_t t)
+{
+        int u = 1, n = 0;
+        char *line = NULL;
+        size_t len = 0;
+        intmax_t id;
+
+        while (getline(&line, &len, stream) != -1) {
+                if (u && strcmp(line, UNWANTEDATWARNLINE) == 0) {
+                        u = 0;
+                        continue;
+                }
+                if (!n) {
+                        sscanf(line, "job %jd at %n", &id, &n);
+                        if (n) {
+                                if (t >= 0)
+                                        printf("id: %s%jd%s, scheduled at: %s%s%s",
+                                               CID, id, CDF, CTM, ctime(&t), CDF);
+                                else
+                                        printf("id: %s%jd%s, scheduled at: %s%s%s",
+                                               CID, id, CDF, CTM, line + n, CDF);
+                                continue;
+                        }
+                }
+                fputs(line, stdout);
+        }
+        free(line);
+}
+
+void
 callat(time_t t, char *atarg)
 {
         int fdr[2], fdw[2];
@@ -237,11 +267,7 @@ callat(time_t t, char *atarg)
                 }
                 default:
                 {
-                        int f;
-                        char *line;
-                        size_t len;
                         FILE *stream;
-                        intmax_t id;
 
                         close(fdw[0]);
                         close(fdr[1]);
@@ -254,12 +280,12 @@ callat(time_t t, char *atarg)
                                         exit(1);
                                 }
                                 close(fd);
-                                dprintf(fdw[1], "echo \"$$\" >%s\n"
-                                                "t=$(( %jd - $(date +%%s) ))\n"
+                                dprintf(fdw[1], "echo \"$$\" >%1$s\n"
+                                                "t=$(( %2$jd - $(date +%%s) ))\n"
                                                 "[ \"$t\" -gt 0 ] && sleep \"$t\"\n"
-                                                "%s \"$NT_MESSAGE\"\n"
-                                                "rm -f %s",
-                                                        tmp, (intmax_t)t, NOTIFY, tmp);
+                                                "%3$s \"$NT_MESSAGE\"\n"
+                                                "rm -f %1$s",
+                                                        tmp, (intmax_t)t, NOTIFY);
                         } else
                                 dprintf(fdw[1], "%s \"$NT_MESSAGE\"", NOTIFY);
                         close(fdw[1]);
@@ -268,17 +294,7 @@ callat(time_t t, char *atarg)
                                 perror("callat - fdopen");
                                 exit(1);
                         }
-                        f = 1, line = NULL, len = 0;
-                        while (getline(&line, &len, stream) != -1)
-                                if (f && strcmp(line, UNWANTEDATWARNLINE) == 0)
-                                        f = 0;
-                                else if (t >= 0 && sscanf(line, "job %jd", &id) == 1) {
-                                        printf("id: %s%jd%s, scheduled at: %s%s%s",
-                                               COLORID, id, COLORDF, COLORTM, ctime(&t), COLORDF);
-                                        t = -1;
-                                } else
-                                        fputs(line, stdout);
-                        free(line);
+                        filteroutput(stream, t);
                         fclose(stream);
                 }
         }
