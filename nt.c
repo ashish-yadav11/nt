@@ -56,16 +56,12 @@ getntmessage()
 
         fputs(NTMESSAGEPROMPT, stdout);
         n = getline(&ntm, &len, stdin) - 1;
-        if (n < 0) {
+        if (n < 0 || ntm[0] == '\n' || ntm[0] == '\0') {
                 free(ntm);
                 return 0;
         }
         if (ntm[n] == '\n')
                 ntm[n] = '\0';
-        if (ntm[0] == '\0') {
-                free(ntm);
-                return 0;
-        }
         setenv("NT_MESSAGE", ntm, 1);
         free(ntm);
         return 1;
