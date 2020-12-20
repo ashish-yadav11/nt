@@ -33,7 +33,8 @@ gcc -o nt -O3 -Wall -Wextra nt.c
         "	nt 1,10 '1 hour 10 minutes up'\n" \
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
-        "	nt :5 '00:05 up'"
+        "	nt :5 '00:05 up'\n" \
+        "	nt -t 'noon tomorrow' 'noon time'"
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
@@ -49,17 +50,24 @@ enum { None, Period, Comma, Second, Minute, Hour };
 int
 getntmessage()
 {
-        char *buf = NULL;
+        char *ntm = NULL;
         size_t len = 0;
+        ssize_t n;
 
         fputs(NTMESSAGEPROMPT, stdout);
-        getline(&buf, &len, stdin);
-        if (buf[0] == '\0') {
-                free(buf);
+        n = getline(&ntm, &len, stdin) - 1;
+        if (n < 0) {
+                free(ntm);
                 return 0;
         }
-        setenv("NT_MESSAGE", buf, 1);
-        free(buf);
+        if (ntm[n] == '\n')
+                ntm[n] = '\0';
+        if (ntm[0] == '\0') {
+                free(ntm);
+                return 0;
+        }
+        setenv("NT_MESSAGE", ntm, 1);
+        free(ntm);
         return 1;
 }
 
@@ -69,7 +77,7 @@ catntmessage(int size, char *array[])
 {
         int i;
         char *c;
-        char *buf;
+        char *ntm;
         size_t len[size];
         size_t sumlen = 0;
 
@@ -77,15 +85,15 @@ catntmessage(int size, char *array[])
                 sumlen += len[i] = strlen(array[i]);
         if (!sumlen)
                 return 0;
-        buf = malloc(sumlen + size);
-        memcpy(buf, array[0], len[0]);
-        for (i = 1, c = buf + len[0]; i < size; c += len[i], i++) {
+        ntm = malloc(sumlen + size);
+        memcpy(ntm, array[0], len[0]);
+        for (i = 1, c = ntm + len[0]; i < size; c += len[i], i++) {
                 *(c++) = ' ';
                 memcpy(c, array[i], len[i]);
         }
         *c = '\0';
-        setenv("NT_MESSAGE", buf, 1);
-        free(buf);
+        setenv("NT_MESSAGE", ntm, 1);
+        free(ntm);
         return 1;
 }
 

@@ -54,6 +54,7 @@ nt 1,10 '1 hour 10 minutes up'
 nt 11:15 '11:15 up'
 nt 1: '01:00 up'
 nt :5 '00:05 up'
+nt -t 'noon tomorrow' 'noon time'
 ```
 
 # Installation
