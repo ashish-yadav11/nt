@@ -2,4 +2,4 @@
 #define NOTIFY                          "notify-send -t 0"
 
 /* prompt when asking for notification message */
-#define NTMESSAGEPROMPT                 "notification message> "
+#define NTMESSAGEPROMPT                 "Notification Message> "

@@ -38,9 +38,9 @@ gcc -o nt -O3 -Wall -Wextra nt.c
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
-#define CID                             "\033[32m"
-#define CTM                             "\033[33m"
-#define CDF                             "\033[0m"
+#define COLID                           "\033[32m"
+#define COLTM                           "\033[33m"
+#define COLDF                           "\033[0m"
 
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
@@ -220,10 +220,10 @@ filteroutput(FILE *stream, time_t t)
                         if (n) {
                                 if (t >= 0)
                                         printf("id: %s%jd%s, scheduled at: %s%s%s",
-                                               CID, id, CDF, CTM, ctime(&t), CDF);
+                                               COLID, id, COLDF, COLTM, ctime(&t), COLDF);
                                 else
                                         printf("id: %s%jd%s, scheduled at: %s%s%s",
-                                               CID, id, CDF, CTM, line + n, CDF);
+                                               COLID, id, COLDF, COLTM, line + n, COLDF);
                                 continue;
                         }
                 }
