@@ -1,8 +1,8 @@
 # nt
 
-`at` wrapper for setting one time notification alarms. Alarms can be set after
+'at' wrapper for setting one time notification alarms. Alarms can be set after
 a specific time interval with upto seconds precision or at some time within a
-day or using `at` supported time specification (see `man at`).
+day or using 'at' supported time specification (see `man at`).
 
 # Configuration
 
@@ -14,8 +14,8 @@ notification message can be configured in `config.h`.
 
 # Dependencies
 
-* `at`
-* a program capable of sending notifications (e.g. `notify-send`)
+* at
+* a program capable of sending notifications (e.g. notify-send)
 
 # Usage
 
