@@ -1,9 +1,3 @@
-/* compilation:
-
-gcc -o nt -O3 -Wall -Wextra nt.c
-
-*/
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
