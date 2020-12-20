@@ -22,7 +22,7 @@ notification message can be configured in `config.h`.
 ```
 nt -h|--help
 nt <time-specification> [<notification-message>...]
-nt -t <at-supported-time-specification> [<notification-message>...]
+nt -t <at-supported-time-specification>... [-m <notification-message>...]
 ntq
 ntrm -a|<id>
 ```
@@ -54,7 +54,7 @@ nt 1,10 '1 hour 10 minutes up'
 nt 11:15 '11:15 up'
 nt 1: '01:00 up'
 nt :5 '00:05 up'
-nt -t 'noon tomorrow' 'noon time'
+nt -t noon tomorrow -m 'noon time'
 ```
 
 # Installation

@@ -12,7 +12,7 @@
         "Usage:\n" \
         "	nt -h|--help\n" \
         "	nt <time-specification> [<notification-message>...]\n" \
-        "	nt -t <at-supported-time-specification> [<notification-message>...]\n" \
+        "	nt -t <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
         "		relative - [H,]M[.S] or [Hh][Mm][Ss]\n" \
@@ -28,7 +28,7 @@
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
         "	nt :5 '00:05 up'\n" \
-        "	nt -t 'noon tomorrow' 'noon time'"
+        "	nt -t noon tomorrow -m 'noon time'"
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
@@ -36,6 +36,7 @@
 #define COLTM                           "\033[33m"
 #define COLDF                           "\033[0m"
 
+#define AT(arg)                         (char *[]){ "at", "-M", arg, NULL }
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
 /* last special token in time specification */
@@ -88,44 +89,44 @@ catntmessage(int size, char *array[])
         return 1;
 }
 
-/* the following function assumes that atarg points to a buffer of length >= 5 */
+/* the following function assumes that t points to a buffer of length 5 */
 int
-parseatarg(char *arg, char *colon, char *atarg)
+parsetime(char *arg, char *colon, char *t)
 {
         switch (colon - arg) {
                 case 0:
-                        atarg[0] = atarg[1] = '0';
+                        t[0] = t[1] = '0';
                         break;
                 case 1:
                         if (!ISDIGIT(arg[0]))
                                 return 0;
-                        atarg[0] = '0', atarg[1] = arg[0];
+                        t[0] = '0', t[1] = arg[0];
                         break;
                 case 2:
                         if (!ISDIGIT(arg[0]) || !ISDIGIT(arg[1]))
                                 return 0;
-                        atarg[0] = arg[0], atarg[1] = arg[1];
+                        t[0] = arg[0], t[1] = arg[1];
                         break;
                 default:
                         return 0;
         }
         if (ISDIGIT(colon[1])) {
                 if (ISDIGIT(colon[2]))
-                        atarg[2] = colon[1], atarg[3] = colon[2];
+                        t[2] = colon[1], t[3] = colon[2];
                 else if (colon[2] == '\0')
-                        atarg[2] = '0', atarg[3] = colon[1];
+                        t[2] = '0', t[3] = colon[1];
                 else
                         return 0;
         } else if (colon[1] == '\0')
-                atarg[2] = atarg[3] = '0';
+                t[2] = t[3] = '0';
         else
                 return 0;
-        atarg[4] = '\0';
+        t[4] = '\0';
         return 1;
 }
 
 int
-parsetime(char *arg, unsigned int *t)
+parseduration(char *arg, unsigned int *t)
 {
         int last;
         unsigned int i;
@@ -224,7 +225,7 @@ filteroutput(FILE *stream, time_t t)
 }
 
 void
-callat(time_t t, char *atarg)
+callat(time_t t, char *at[])
 {
         int fdr[2], fdw[2];
 
@@ -237,9 +238,6 @@ callat(time_t t, char *atarg)
                         perror("callat - fork");
                         exit(1);
                 case 0:
-                {
-                        char *arg[] = { "at", "-M", atarg, NULL };
-
                         close(fdw[1]);
                         close(fdr[0]);
                         if (fdw[0] != STDIN_FILENO) {
@@ -260,10 +258,9 @@ callat(time_t t, char *atarg)
                                 perror("callat - child - dup2");
                                 exit(1);
                         }
-                        execvp(arg[0], arg);
+                        execvp(at[0], at);
                         perror("callat - child - execvp");
                         _exit(127);
-                }
                 default:
                 {
                         FILE *stream;
@@ -314,40 +311,49 @@ main(int argc, char *argv[])
                 return 0;
         }
         if (strcmp(argv[1], "-t") == 0) {
+                int i;
+
                 if (argc < 3) {
                         fputs("nt: not enough arguments\n" USAGE "\n", stderr);
                         return 2;
                 }
-                if (argc == 3 ? !getntmessage() : !catntmessage(argc - 3, argv + 3)) {
+                for (i = 3; i < argc && strcmp(argv[i], "-m") != 0; i++);
+                if (i == argc ? !getntmessage() : !catntmessage(argc - i - 1, argv + i + 1)) {
                         fputs("nt: notification message can't be empty\n", stderr);
                         return 2;
                 }
-                callat(-1, argv[2]);
-        } else {
-                if (argc == 2 ? !getntmessage() : !catntmessage(argc - 2, argv + 2)) {
-                        fputs("nt: notification message can't be empty\n", stderr);
-                        return 2;
-                }
-                if ((c = strchr(argv[1], ':'))) {
-                        char atarg[6];
+                {
+                        char *at[i + 1];
 
-                        if (parseatarg(argv[1], c, atarg)) {
-                                callat(-1, atarg);
-                                return 0;
-                        }
-                } else if (parsetime(argv[1], &t)) {
-                        if (t < 120)
-                                callat(time(NULL) + t, "now");
-                        else {
-                                char atarg[25];
-
-                                snprintf(atarg, sizeof atarg, "now + %u minutes", t / 60 - 1);
-                                callat(time(NULL) + t, atarg);
-                        }
-                        return 0;
+                        at[0] = "at", at[1] = "-M", at[i] = NULL;
+                        for (int j = 2; j < i; j++)
+                                at[j] = argv[j];
+                        callat(-1, at);
                 }
-                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                return 0;
+        }
+        if (argc == 2 ? !getntmessage() : !catntmessage(argc - 2, argv + 2)) {
+                fputs("nt: notification message can't be empty\n", stderr);
                 return 2;
         }
-        return 0;
+        if ((c = strchr(argv[1], ':'))) {
+                char arg[5];
+
+                if (parsetime(argv[1], c, arg)) {
+                        callat(-1, AT(arg));
+                        return 0;
+                }
+        } else if (parseduration(argv[1], &t)) {
+                if (t < 120)
+                        callat(time(NULL) + t, AT("now"));
+                else {
+                        char arg[23];
+
+                        snprintf(arg, sizeof arg, "now + %u minutes", t / 60 - 1);
+                        callat(time(NULL) + t, AT(arg));
+                }
+                return 0;
+        }
+        fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+        return 2;
 }
