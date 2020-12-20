@@ -54,7 +54,8 @@ getntmessage()
         size_t len = 0;
         ssize_t n;
 
-        fputs(NTMESSAGEPROMPT, stdout);
+        if (isatty(STDIN_FILENO))
+                fputs(NTMESSAGEPROMPT, stdout);
         n = getline(&ntm, &len, stdin) - 1;
         if (n < 0 || ntm[0] == '\n' || ntm[0] == '\0') {
                 free(ntm);
