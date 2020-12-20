@@ -244,7 +244,7 @@ callat(time_t t, char *atarg)
                         exit(1);
                 case 0:
                 {
-                        char *arg[] = { "/usr/bin/at", atarg, NULL };
+                        char *arg[] = { "at", "-M", atarg, NULL };
 
                         close(fdw[1]);
                         close(fdr[0]);
@@ -266,8 +266,8 @@ callat(time_t t, char *atarg)
                                 perror("callat - child - dup2");
                                 exit(1);
                         }
-                        execv(arg[0], arg);
-                        perror("callat - child - execv");
+                        execvp(arg[0], arg);
+                        perror("callat - child - execvp");
                         _exit(127);
                 }
                 default:
