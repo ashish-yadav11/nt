@@ -12,7 +12,7 @@
         "Usage:\n" \
         "	nt -h|--help\n" \
         "	nt <time-specification> [<notification-message>...]\n" \
-        "	nt -t <at-supported-time-specification>... [-m <notification-message>...]\n" \
+        "	nt -a <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
         "		relative - [H,]M[.S] or [Hh][Mm][Ss]\n" \
@@ -28,7 +28,7 @@
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
         "	nt :5 '00:05 up'\n" \
-        "	nt -t noon tomorrow -m 'noon time'"
+        "	nt -a noon tomorrow -m 'noon time'"
 
 #define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
 
@@ -310,7 +310,7 @@ main(int argc, char *argv[])
                 puts(USAGE);
                 return 0;
         }
-        if (strcmp(argv[1], "-t") == 0) {
+        if (strcmp(argv[1], "-a") == 0) {
                 int i;
 
                 if (argc < 3) {
