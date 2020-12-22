@@ -318,16 +318,16 @@ main(int argc, char *argv[])
                         return 2;
                 }
                 for (i = 3; i < argc && strcmp(argv[i], "-m") != 0; i++);
-                if (i == argc ? !getntmessage() : !catntmessage(argc - i - 1, argv + i + 1)) {
+                if (i++ == argc ? !getntmessage() : !catntmessage(argc - i, argv + i)) {
                         fputs("nt: notification message can't be empty\n", stderr);
                         return 2;
                 }
                 {
                         char *at[i + 1];
 
-                        at[0] = "at", at[1] = "-M", at[i] = NULL;
-                        for (int j = 2; j < i; j++)
-                                at[j] = argv[j];
+                        at[0] = "at", at[1] = "-M", at[2] = "--", at[i] = NULL;
+                        for (int j = 3; j < i; j++)
+                                at[j] = argv[j - 1];
                         callat(-1, at);
                 }
                 return 0;
