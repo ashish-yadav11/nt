@@ -30,7 +30,9 @@
         "	nt :5 '00:05 up'\n" \
         "	nt -a noon tomorrow -m 'noon time'"
 
-#define UNWANTEDATWARNLINE              "warning: commands will be executed using /bin/sh\n"
+#define ATSHELLWARNING                  "warning: commands will be executed using /bin/sh\n"
+#define ATSYNTAXERROR                   "syntax error. Last token seen: "
+#define ATGARBLEDTIME                   "Garbled time\n"
 
 #define COLID                           "\033[32m"
 #define COLTM                           "\033[33m"
@@ -194,17 +196,17 @@ parseduration(char *arg, unsigned int *t)
         return *t ? 1 : 0;
 }
 
-void
-filteroutput(FILE *stream, time_t t)
+int
+processatoutput(FILE *stream, time_t t)
 {
-        int u = 1, n = 0;
+        int s = 1, e = 1, g = 1, n = 0;
         char *line = NULL;
         size_t len = 0;
         intmax_t id;
 
         while (getline(&line, &len, stream) != -1) {
-                if (u && strcmp(line, UNWANTEDATWARNLINE) == 0) {
-                        u = 0;
+                if (s && strcmp(line, ATSHELLWARNING) == 0) {
+                        s = 0;
                         continue;
                 }
                 if (!n) {
@@ -219,9 +221,22 @@ filteroutput(FILE *stream, time_t t)
                                 continue;
                         }
                 }
+                if (e && strncmp(line, ATSYNTAXERROR, sizeof ATSYNTAXERROR - 1) == 0) {
+                        if (!g)
+                                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                        e = 0;
+                        continue;
+                }
+                if (g && strcmp(line, ATGARBLEDTIME) == 0) {
+                        if (!e)
+                                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                        g = 0;
+                        continue;
+                }
                 fputs(line, stdout);
         }
         free(line);
+        return e && g;
 }
 
 void
@@ -267,6 +282,12 @@ callat(time_t t, char *at[])
 
                         close(fdw[0]);
                         close(fdr[1]);
+                        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+                                close(fdw[1]);
+                                close(fdr[0]);
+                                perror("callat - signal");
+                                exit(1);
+                        }
                         if (t >= 0) {
                                 int fd;
                                 char tmp[] = "/var/tmp/nt-XXXXXX";
@@ -290,7 +311,10 @@ callat(time_t t, char *at[])
                                 perror("callat - fdopen");
                                 exit(1);
                         }
-                        filteroutput(stream, t);
+                        if (!processatoutput(stream, t)) {
+                                fclose(stream);
+                                exit(2);
+                        }
                         fclose(stream);
                 }
         }
