@@ -1,11 +1,10 @@
-#PREFIX = /usr/local
-PREFIX = ${HOME}/.local
+PREFIX = /usr/local
 
 CC = gcc
 CFLAGS = -O3 -Wall -Wextra
 
 nt: nt.c config.h
-	${CC} -o $@ ${CFLAGS} $<
+	${CC} -o $@ ${CFLAGS} nt.c
 
 config.h:
 	cp config.def.h config.h
