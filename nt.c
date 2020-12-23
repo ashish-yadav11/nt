@@ -32,7 +32,6 @@
 
 #define ATSHELLWARNING                  "warning: commands will be executed using /bin/sh\n"
 #define ATSYNTAXERROR                   "syntax error. Last token seen: "
-#define ATGARBLEDTIME                   "Garbled time\n"
 
 #define COLID                           "\033[32m"
 #define COLTM                           "\033[33m"
@@ -199,7 +198,7 @@ parseduration(char *arg, unsigned int *t)
 int
 processatoutput(FILE *stream, time_t t)
 {
-        int s = 1, e = 1, g = 1, n = 0;
+        int s = 1, n = 0;
         char *line = NULL;
         size_t len = 0;
         intmax_t id;
@@ -221,22 +220,15 @@ processatoutput(FILE *stream, time_t t)
                                 continue;
                         }
                 }
-                if (e && strncmp(line, ATSYNTAXERROR, sizeof ATSYNTAXERROR - 1) == 0) {
-                        if (!g)
-                                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
-                        e = 0;
-                        continue;
-                }
-                if (g && strcmp(line, ATGARBLEDTIME) == 0) {
-                        if (!e)
-                                fputs("nt: invalid time specification\n" USAGE "\n", stderr);
-                        g = 0;
-                        continue;
+                if (strncmp(line, ATSYNTAXERROR, sizeof ATSYNTAXERROR - 1) == 0) {
+                        fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                        free(line);
+                        return 0;
                 }
                 fputs(line, stdout);
         }
         free(line);
-        return e && g;
+        return 1;
 }
 
 void
