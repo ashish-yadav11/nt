@@ -192,7 +192,8 @@ parseduration(char *arg, unsigned int *t)
                                 return 0;
                         break;
         }
-        return j ? (*t = j, 1) : 0;
+        *t = j;
+        return 1;
 }
 
 int
