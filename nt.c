@@ -201,7 +201,7 @@ processatoutput(FILE *stream, time_t t)
                 if (!n) {
                         sscanf(line, "job %jd at %n", &id, &n);
                         if (n) {
-                                if (t >= 0)
+                                if (t)
                                         printf("id: %s%jd%s, scheduled at: %s%s%s",
                                                COLID, id, COLDF, COLTM, ctime(&t), COLDF);
                                 else
@@ -270,7 +270,7 @@ callat(time_t t, char *at[])
                                 perror("callat - signal");
                                 exit(1);
                         }
-                        if (t >= 0) {
+                        if (t) {
                                 int fd;
                                 char tmp[] = "/var/tmp/nt-XXXXXX";
 
@@ -334,7 +334,7 @@ main(int argc, char *argv[])
                         at[0] = "at", at[1] = "-M", at[2] = "--", at[i] = NULL;
                         for (int j = 3; j < i; j++)
                                 at[j] = argv[j - 1];
-                        callat(-1, at);
+                        callat(0, at);
                 }
                 return 0;
         }
@@ -346,7 +346,7 @@ main(int argc, char *argv[])
                 char arg[5];
 
                 if (parsetime(argv[1], c, arg)) {
-                        callat(-1, AT(arg));
+                        callat(0, AT(arg));
                         return 0;
                 }
         } else if (parseduration(argv[1], &t)) {
