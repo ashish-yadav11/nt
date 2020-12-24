@@ -129,10 +129,10 @@ parsetime(char *arg, char *colon, char *t)
 int
 parseduration(char *arg, unsigned int *t)
 {
-        int last;
-        unsigned int i;
+        int last = None;
+        unsigned int i = 0, j = 0;
 
-        for (last = None, *t = 0, i = 0; *arg != '\0'; arg++) {
+        for (; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
                         i = 10 * i + *arg - '0';
                         continue;
@@ -142,35 +142,35 @@ parseduration(char *arg, unsigned int *t)
                                 if (last != None)
                                         return 0;
                                 last = Comma;
-                                *t = 60 * 60 * i;
+                                j = 60 * 60 * i;
                                 i = 0;
                                 break;
                         case '.':
                                 if (last != None && last != Comma)
                                         return 0;
                                 last = Period;
-                                *t += 60 * i;
+                                j += 60 * i;
                                 i = 0;
                                 break;
                         case 'h':
                                 if (last != None)
                                         return 0;
                                 last = Hour;
-                                *t = 60 * 60 * i;
+                                j = 60 * 60 * i;
                                 i = 0;
                                 break;
                         case 'm':
                                 if (last != None && last != Hour)
                                         return 0;
                                 last = Minute;
-                                *t += 60 * i;
+                                j += 60 * i;
                                 i = 0;
                                 break;
                         case 's':
                                 if (last != None && last != Hour && last != Minute)
                                         return 0;
                                 last = Second;
-                                *t += i;
+                                j += i;
                                 i = 0;
                                 break;
                         default:
@@ -179,20 +179,20 @@ parseduration(char *arg, unsigned int *t)
         }
         switch (last) {
                 case None:
-                        *t = 60 * i;
+                        j = 60 * i;
                         break;
                 case Period:
-                        *t += i;
+                        j += i;
                         break;
                 case Comma:
-                        *t += 60 * i;
+                        j += 60 * i;
                         break;
                 default:
                         if (i)
                                 return 0;
                         break;
         }
-        return *t ? 1 : 0;
+        return j ? (*t = j, 1) : 0;
 }
 
 int
