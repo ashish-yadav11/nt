@@ -15,16 +15,13 @@
         "	nt -a <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
-        "		relative - [H,]M[.S] or [Hh][Mm][Ss]\n" \
+        "		relative - M[.m] or [Hh][Mm][Ss]\n" \
         "		absolute - [HH]:[MM]\n" \
         "Examples:\n" \
         "	nt 10 '10 minutes up'\n" \
         "	nt 30s '30 seconds up'\n" \
-        "	nt 1, '1 hour up'\n" \
-        "	nt 5.30 '5 minutes 30 seconds up'\n" \
+        "	nt 2.5 '2.5 minutes up'\n" \
         "	nt 2h5s '2 hours 5 seconds up'\n" \
-        "	nt .10 '10 seconds up'\n" \
-        "	nt 1,10 '1 hour 10 minutes up'\n" \
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
         "	nt :5 '00:05 up'\n" \
@@ -41,7 +38,7 @@
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
 /* last special token in time specification */
-enum { None, Period, Comma, Second, Minute, Hour };
+enum { None, Period, Second, Minute, Hour };
 
 int
 getntmessage()
@@ -130,26 +127,21 @@ int
 parseduration(char *arg, unsigned int *t)
 {
         int last = None;
-        unsigned int i = 0, j = 0;
+        unsigned int i = 0, j = 0, d = 1;
 
         for (; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
                         i = 10 * i + *arg - '0';
+                        if (last == Period)
+                                d *= 10;
                         continue;
                 }
                 switch (*arg) {
-                        case ',':
+                        case '.':
                                 if (last != None)
                                         return 0;
-                                last = Comma;
-                                j = 60 * 60 * i;
-                                i = 0;
-                                break;
-                        case '.':
-                                if (last != None && last != Comma)
-                                        return 0;
                                 last = Period;
-                                j += 60 * i;
+                                j = 60 * i;
                                 i = 0;
                                 break;
                         case 'h':
@@ -182,10 +174,7 @@ parseduration(char *arg, unsigned int *t)
                         j = 60 * i;
                         break;
                 case Period:
-                        j += i;
-                        break;
-                case Comma:
-                        j += 60 * i;
+                        j += (60 * i) / d;
                         break;
                 default:
                         if (i)
