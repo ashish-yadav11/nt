@@ -15,12 +15,13 @@
         "	nt -a <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
-        "		relative - M[.m] or [Hh][Mm][Ss]\n" \
+        "		relative - M[.M] or [H[.H]h][M[.M]m][Ss]\n" \
         "		absolute - [HH]:[MM]\n" \
         "Examples:\n" \
-        "	nt 10 '10 minutes up'\n" \
+        "	nt 15 '15 minutes up'\n" \
         "	nt 30s '30 seconds up'\n" \
-        "	nt 2.5 '2.5 minutes up'\n" \
+        "	nt 4.5 '4.5 minutes up'\n" \
+        "	nt .5h 'half hour up'\n" \
         "	nt 2h5s '2 hours 5 seconds up'\n" \
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \
@@ -37,8 +38,7 @@
 #define AT(arg)                         (char *[]){ "at", "-M", arg, NULL }
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
-/* last special token in time specification */
-enum { None, Period, Second, Minute, Hour };
+enum { None, Second, Minute, Hour }; /* last special token in time specification */
 
 int
 getntmessage()
@@ -126,43 +126,43 @@ parsetime(char *arg, char *colon, char *t)
 int
 parseduration(char *arg, unsigned int *t)
 {
-        int last = None;
-        unsigned int i = 0, j = 0, d = 1;
+        int last = None, period = 0;
+        unsigned int i = 0, f = 0, d = 1, c = 0;
 
         for (; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
-                        i = 10 * i + *arg - '0';
-                        if (last == Period)
+                        if (period) {
+                                f = 10 * f + *arg - '0';
                                 d *= 10;
+                        } else
+                                i = 10 * i + *arg - '0';
                         continue;
                 }
                 switch (*arg) {
                         case '.':
-                                if (last != None)
+                                if (period)
                                         return 0;
-                                last = Period;
-                                j = 60 * i;
-                                i = 0;
+                                period = 1;
                                 break;
                         case 'h':
                                 if (last != None)
                                         return 0;
                                 last = Hour;
-                                j = 60 * 60 * i;
-                                i = 0;
+                                c = 60 * 60 * i + (60 * 60 * f) / d;
+                                i = 0, period = 0, f = 0;
                                 break;
                         case 'm':
-                                if (last != None && last != Hour)
+                                if (last != Hour && last != None)
                                         return 0;
                                 last = Minute;
-                                j += 60 * i;
-                                i = 0;
+                                c += 60 * i + (60 * f) / d;
+                                i = 0, period = 0, f = 0;
                                 break;
                         case 's':
-                                if (last != None && last != Hour && last != Minute)
+                                if (period || last == Second)
                                         return 0;
                                 last = Second;
-                                j += i;
+                                c += i;
                                 i = 0;
                                 break;
                         default:
@@ -171,17 +171,14 @@ parseduration(char *arg, unsigned int *t)
         }
         switch (last) {
                 case None:
-                        j = 60 * i;
-                        break;
-                case Period:
-                        j += (60 * i) / d;
+                        c = 60 * i + (60 * f) / d;
                         break;
                 default:
-                        if (i)
+                        if (i || f)
                                 return 0;
                         break;
         }
-        *t = j;
+        *t = c;
         return 1;
 }
 
