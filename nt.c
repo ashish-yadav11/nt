@@ -208,7 +208,7 @@ processatoutput(FILE *stream, time_t t)
                         }
                 }
                 if (strncmp(line, ATSYNTAXERROR, sizeof ATSYNTAXERROR - 1) == 0) {
-                        fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+                        fputs("nt: invalid time specification\n", stderr);
                         free(line);
                         return 0;
                 }
@@ -306,7 +306,7 @@ main(int argc, char *argv[])
         char *c;
 
         if (argc < 2) {
-                fputs("nt: not enough arguments\n" USAGE "\n", stderr);
+                fputs("nt: not enough arguments\n", stderr);
                 return 2;
         }
         if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
@@ -317,7 +317,7 @@ main(int argc, char *argv[])
                 int i;
 
                 if (argc < 3) {
-                        fputs("nt: not enough arguments\n" USAGE "\n", stderr);
+                        fputs("nt: not enough arguments\n", stderr);
                         return 2;
                 }
                 for (i = 3; i < argc && strcmp(argv[i], "-m") != 0; i++);
@@ -357,6 +357,6 @@ main(int argc, char *argv[])
                 }
                 return 0;
         }
-        fputs("nt: invalid time specification\n" USAGE "\n", stderr);
+        fputs("nt: invalid time specification\n", stderr);
         return 2;
 }
