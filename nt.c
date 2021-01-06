@@ -277,8 +277,11 @@ callat(time_t t, char *at[])
                                 }
                                 close(fd);
                                 dprintf(fdw[1], "echo \"$$\" >%1$s\n"
-                                                "t=$(( %2$jd - $(date +%%s) ))\n"
-                                                "[ \"$t\" -gt 0 ] && sleep \"$t\"\n"
+                                                "while true ; do\n"
+                                                "    t=$(( %2$jd - $(date +%%s) ))\n"
+                                                "    [ \"$t\" -le 0 ] && break\n"
+                                                "    sleep \"$t\"\n"
+                                                "done\n"
                                                 "%3$s \"$NT_MESSAGE\"\n"
                                                 "rm -f %1$s",
                                                         tmp, (intmax_t)t, NOTIFY);
