@@ -280,7 +280,7 @@ callat(time_t t, char *at[])
                                                 "while true ; do\n"
                                                 "    t=$(( %2$jd - $(date +%%s) ))\n"
                                                 "    [ \"$t\" -le 0 ] && break\n"
-                                                "    sleep \"$t\"\n"
+                                                "    sleep \"$t\" && break\n"
                                                 "done\n"
                                                 "%3$s \"$NT_MESSAGE\"\n"
                                                 "rm -f %1$s",
