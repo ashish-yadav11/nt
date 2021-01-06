@@ -62,3 +62,19 @@ Clone the repository and run
 cd nt
 sudo make install clean
 ```
+
+# Extra Tip
+
+If you want pending ntq alarms to be shown instantly after waking up from
+suspend, add an executable file with the following lines in
+`/usr/lib/systemd/system-sleep` -
+
+```
+#!/bin/sh
+read -r PID </var/run/atd.pid && kill -HUP "$PID"
+ntping
+```
+
+The first line pings at daemon to check for pending jobs (might not work on
+every system, works on Arch). The second line pings already running nt jobs to
+recalculate time left to sleep and notify if time is up.
