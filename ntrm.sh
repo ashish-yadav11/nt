@@ -13,7 +13,7 @@ case $1 in
                 pidfile=$(
                     at -c "$id" | awk -F'>' '
                         /^NT_MESSAGE=/ {e=1}
-                        $1=="echo \"$$\" " {print $2}
+                        $1=="echo \"$$\" " {print $2; exit}
                         END {exit !e}
                     '
                 ) || continue
@@ -35,7 +35,7 @@ case $1 in
             { at -c "$id" 2>/dev/null || { echo "ntrm: invalid id"; exit ;} ;} |
                 awk -F'>' '
                     /^NT_MESSAGE=/ {e=1}
-                    $1=="echo \"$$\" " {print $2}
+                    $1=="echo \"$$\" " {print $2; exit}
                     END {exit !e}
                 '
         ) || { echo "ntrm: invalid id"; exit ;}
