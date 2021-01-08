@@ -1,6 +1,5 @@
 #!/bin/sh
 [ "$#" -eq 0 ] && { echo "Usage: ntrm -a|<id>"; exit ;}
-
 case $1 in
     -a)
         printf "Remove all pending notification alarms? [y/N]: "
@@ -46,4 +45,5 @@ case $1 in
             at -r "$id"
             rm -f "$pidfile"
         fi
+        ;;
 esac
