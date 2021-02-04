@@ -1,5 +1,5 @@
 #!/bin/sh
-at -l | LC_ALL=C sort -k7,7 | awk '$7!="=" {exit}; {print $1}' |
+at -l | awk '$7=="=" {print $1}' |
     while read -r id ; do
         pidfile=$(
             at -c "$id" | awk -F'>' '

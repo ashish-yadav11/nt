@@ -17,33 +17,26 @@ case $1 in
                     '
                 ) || continue
                 case $job in
-                    =*)
-                        read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID")
-                        rm -f "$pidfile"
-                        ;;
-                    *)
-                        at -r "$id"
-                        rm -f "$pidfile"
-                        ;;
+                    =*) read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID") ;;
+                     *) at -r "$id" ;;
                 esac
+                rm -f "$pidfile"
         done
         ;;
     *)
-        id=$1
         pidfile=$(
-            { at -c "$id" 2>/dev/null || { echo "ntrm: invalid id"; exit ;} ;} |
+            { at -c "$1" 2>/dev/null || { echo "ntrm: invalid id"; exit ;} ;} |
                 awk -F'>' '
                     /^NT_MESSAGE=/ {e=1}
                     $1=="echo \"$$\" " {print $2; exit}
                     END {exit !e}
                 '
         ) || { echo "ntrm: invalid id"; exit ;}
-        if at -l | awk -v id="$id" '$1==id {exit $7!="="}' ; then
+        if at -l | awk -v id="$1" '$1==id && $7=="=" {e=1; exit} END {exit !e}' ; then
             read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID")
-            rm -f "$pidfile"
         else
-            at -r "$id"
-            rm -f "$pidfile"
+            at -r "$1"
         fi
+        rm -f "$pidfile"
         ;;
 esac
