@@ -47,15 +47,25 @@ getntmessage()
         size_t len = 0;
         ssize_t n;
 
-        if (isatty(STDIN_FILENO))
+        if (isatty(STDIN_FILENO)) {
                 fputs(NTMESSAGEPROMPT, stdout);
-        n = getline(&ntm, &len, stdin) - 1;
-        if (n < 0 || ntm[0] == '\n' || ntm[0] == '\0') {
+                fflush(stdout);
+                if ((n = getline(&ntm, &len, stdin) - 1) < 0) {
+                        puts("");
+                        free(ntm);
+                        return 0;
+                }
+        } else
+                if ((n = getline(&ntm, &len, stdin) - 1) < 0) {
+                        free(ntm);
+                        return 0;
+                }
+        if (ntm[n] == '\n')
+                ntm[n] = '\0';
+        if (ntm[0] == '\0') {
                 free(ntm);
                 return 0;
         }
-        if (ntm[n] == '\n')
-                ntm[n] = '\0';
         setenv("NT_MESSAGE", ntm, 1);
         free(ntm);
         return 1;
