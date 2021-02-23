@@ -21,7 +21,7 @@
         "	nt 15 '15 minutes up'\n" \
         "	nt 30s '30 seconds up'\n" \
         "	nt 4.5 '4.5 minutes up'\n" \
-        "	nt .5h 'half hour up'\n" \
+        "	nt .5h 'half an hour up'\n" \
         "	nt 2h5s '2 hours 5 seconds up'\n" \
         "	nt 11:15 '11:15 up'\n" \
         "	nt 1: '01:00 up'\n" \

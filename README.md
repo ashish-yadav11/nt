@@ -47,7 +47,7 @@ List pending notification alarms.
 nt 15 '15 minutes up'
 nt 30s '30 seconds up'
 nt 4.5 '4.5 minutes up'
-nt .5h 'half hour up'
+nt .5h 'half an hour up'
 nt 2h5s '2 hours 5 seconds up'
 nt 11:15 '11:15 up'
 nt 1: '01:00 up'
