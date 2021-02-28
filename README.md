@@ -60,7 +60,8 @@ nt -a noon tomorrow -m 'noon time'
 Clone the repository and run
 ```
 cd nt
-sudo make install clean
+make
+sudo make install
 ```
 
 # Extra Tip
