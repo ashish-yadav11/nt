@@ -7,7 +7,7 @@ nt: nt.c config.h
 	${CC} -o $@ ${CFLAGS} nt.c
 
 config.h:
-	cp config.def.h config.h
+	cp config.def.h $@
 
 clean:
 	rm -f nt
