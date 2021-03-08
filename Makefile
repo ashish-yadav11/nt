@@ -12,14 +12,17 @@ config.h:
 clean:
 	rm -f nt
 
+BINDIR = ${DESTDIR}${PREFIX}/bin
+
 install: nt
-	mkdir -p ${DESTDIR}${PREFIX}/bin
-	install -m 0755 nt ${DESTDIR}${PREFIX}/bin/nt
-	install -m 0755 ntq.sh ${DESTDIR}${PREFIX}/bin/ntq
-	install -m 0755 ntrm.sh ${DESTDIR}${PREFIX}/bin/ntrm
-	install -m 0755 ntping.sh ${DESTDIR}${PREFIX}/bin/ntping
+	mkdir -p ${BINDIR}
+	cp -f nt ${BINDIR}/nt
+	cp -f ntq.sh ${BINDIR}/ntq
+	cp -f ntrm.sh ${BINDIR}/ntrm
+	cp -f ntping.sh ${BINDIR}/ntping
+	chmod 755 ${BINDIR}/nt ${BINDIR}/ntq ${BINDIR}/ntrm ${BINDIR}/ntping
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/nt ${DESTDIR}${PREFIX}/bin/ntq ${DESTDIR}${PREFIX}/bin/ntrm ${DESTDIR}${PREFIX}/bin/ntping
+	rm -f ${BINDIR}/nt ${BINDIR}/ntq ${BINDIR}/ntrm ${BINDIR}/ntping
 
 .PHONY: clean install uninstall
