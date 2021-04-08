@@ -1,6 +1,6 @@
 #!/bin/sh
 at -l | awk '$7=="=" {print $1}' |
-    while read -r id ; do
+    while IFS='' read -r id ; do
         pidfile=$(
             at -c "$id" | awk -F'>' '
                 /^NT_MESSAGE=/ {e=1}

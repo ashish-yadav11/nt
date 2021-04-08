@@ -7,7 +7,7 @@ case $1 in
         [ "$confirm" != y ] && [ "$confirm" != Y ] && exit
 
         at -l | LC_ALL=C sort -k7,7 | awk '!x[$1] {x[$1]=1; print $7$1}' |
-            while read -r job ; do
+            while IFS='' read -r job ; do
                 id=${job#?}
                 pidfile=$(
                     at -c "$id" | awk -F'>' '
