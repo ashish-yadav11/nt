@@ -28,6 +28,8 @@
         "	nt :5 '00:05 up'\n" \
         "	nt -a noon tomorrow -m 'noon time'"
 
+#define SPOOLDIR                        "/var/spool/nt"
+
 #define ATSHELLWARNING                  "warning: commands will be executed using /bin/sh\n"
 #define ATSYNTAXERROR                   "syntax error. Last token seen: "
 
@@ -279,9 +281,9 @@ callat(time_t t, char *at[])
                         }
                         if (t) {
                                 int fd;
-                                char tmp[] = "/var/tmp/nt-XXXXXX";
+                                char pidfile[] = SPOOLDIR"/XXXXXX";
 
-                                if ((fd = mkstemp(tmp)) == -1) {
+                                if ((fd = mkstemp(pidfile)) == -1) {
                                         perror("callat - mkstemp");
                                         exit(1);
                                 }
@@ -294,7 +296,7 @@ callat(time_t t, char *at[])
                                                 "done\n"
                                                 "%3$s \"$NT_MESSAGE\"\n"
                                                 "rm -f %1$s",
-                                                        tmp, (intmax_t)t, NOTIFY);
+                                                        pidfile, (intmax_t)t, NOTIFY);
                         } else
                                 dprintf(fdw[1], "%s \"$NT_MESSAGE\"", NOTIFY);
                         close(fdw[1]);
