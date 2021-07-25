@@ -2,13 +2,13 @@
 [ "$#" -eq 0 ] && { echo "Usage: ntrm -a|-l|-n|<id>"; exit 2 ;}
 
 remove_by_id() {
-    pidfile=$(
+    pidfile="$(
         at -c "$1" 2>/dev/null | awk -F'>' '
             /^NT_MESSAGE=/ {e=1}
             $1=="echo \"$$\" " {print $2; exit}
             END {exit !e}
         '
-    ) || { echo "ntrm: invalid id" >&2; exit 1 ;}
+    )" || { echo "ntrm: invalid id" >&2; exit 1 ;}
 
     if at -l | awk -v id="$1" '$1==id && $7=="=" {e=1; exit}; END {exit !e}' ; then
         read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID")
@@ -19,16 +19,16 @@ remove_by_id() {
 }
 
 remove_by_job() {
-    id=${1#?}
-    pidfile=$(
+    id="${1#?}"
+    pidfile="$(
         at -c "$id" | awk -F'>' '
             /^NT_MESSAGE=/ {e=1}
             $1=="echo \"$$\" " {print $2; exit}
             END {exit !e}
         '
-    ) || return 1
+    )" || return 1
 
-    case $1 in
+    case "$1" in
         =*) read -r PID 2>/dev/null <"$pidfile" && kill "$PID" $(pgrep -P "$PID") ;;
          *) at -r "$id" ;;
     esac
@@ -36,7 +36,7 @@ remove_by_job() {
     return 0
 }
 
-case $1 in
+case "$1" in
     -a)
         printf "Remove all pending notification alarms? [y/N]: "
         read -r confirm
