@@ -286,7 +286,7 @@ callat(time_t t, char *at[])
 
                         close(fdw[0]);
                         close(fdr[1]);
-                        /* ignore sigpipe, in case child exists early */
+                        /* ignore sigpipe for now (in case child exists early) */
                         signal(SIGPIPE, SIG_IGN);
                         if (t) {
                                 int fd;
@@ -311,6 +311,9 @@ callat(time_t t, char *at[])
                         } else
                                 dprintf(fdw[1], "%s \"$NT_MESSAGE\"", NOTIFY);
                         close(fdw[1]);
+                        /* restore default sigpipe handler */
+                        signal(SIGPIPE, SIG_DFL);
+
                         if (!(stream = fdopen(fdr[0], "r"))) {
                                 perror("callat - fdopen");
                                 close(fdr[0]);
