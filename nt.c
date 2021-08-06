@@ -286,7 +286,7 @@ callat(time_t t, char *at[])
 
                         close(fdw[0]);
                         close(fdr[1]);
-                        /* ignore sigpipe for now (in case child exists early) */
+                        /* ignore sigpipe for now (in case child exits early) */
                         signal(SIGPIPE, SIG_IGN);
                         if (t) {
                                 int fd;
