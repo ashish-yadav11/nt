@@ -286,12 +286,8 @@ callat(time_t t, char *at[])
 
                         close(fdw[0]);
                         close(fdr[1]);
-                        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-                                perror("callat - signal");
-                                close(fdw[1]);
-                                close(fdr[0]);
-                                exit(1);
-                        }
+                        /* ignore sigpipe, in case child exists early */
+                        signal(SIGPIPE, SIG_IGN);
                         if (t) {
                                 int fd;
                                 char pidfile[] = SPOOLDIR"/XXXXXX";
