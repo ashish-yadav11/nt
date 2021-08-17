@@ -43,7 +43,7 @@
 enum { None, Second, Minute, Hour }; /* last special token in time specification */
 
 int
-getntmessage()
+getntmessage(void)
 {
         char *ntm = NULL;
         size_t len = 0;
