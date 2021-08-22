@@ -1,5 +1,5 @@
 #!/bin/sh
-[ "$#" -eq 0 ] && { echo "Usage: ntrm -a|-l|-n|<id>"; exit 2 ;}
+[ "$#" -eq 0 ] && { echo "Usage: ntrm -a|-A|-l|-n|<id>"; exit 2 ;}
 
 remove_by_id() {
     pidfile="$(
@@ -37,11 +37,12 @@ remove_by_job() {
 }
 
 case "$1" in
-    -a)
-        printf "Remove all pending notification alarms? [y/N]: "
-        read -r confirm
-        [ "$confirm" != y ] && [ "$confirm" != Y ] && exit 0
-
+    -[aA])
+        if [ "$1" = -a ] ; then
+            printf "Remove all pending notification alarms? [y/N]: "
+            read -r confirm
+            [ "$confirm" != y ] && [ "$confirm" != Y ] && exit 0
+        fi
         at -l | LC_ALL=C sort -k1,1 -k7,7 | awk 'BEGIN {id=-1}; id!=$1 {print $7$1; id=$1}' |
             while IFS='' read -r job ; do
                 remove_by_job "$job"

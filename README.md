@@ -24,7 +24,7 @@ nt -h|--help
 nt <time-specification> [<notification-message>...]
 nt -a <at-supported-time-specification>... [-m <notification-message>...]
 ntq
-ntrm -a|-l|-n|<id>
+ntrm -a|-A|-l|-n|<id>
 ```
 
 ## time-specification
@@ -39,6 +39,7 @@ List pending notification alarms.
 ## ntrm
 
 * `ntrm -a` - remove all pending notification alarms.
+* `ntrm -A` - remove all pending notification alarms without confirmation.
 * `ntrm -l` - remove the last added notification alarm.
 * `ntrm -n` - remove the next notification alarm.
 * `ntrm <id>` - remove pending notificaiton alarm with id `<id>`.
