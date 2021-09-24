@@ -241,17 +241,11 @@ callat(time_t t, char *at[])
         }
         if (pipe(fdr) == -1) {
                 perror("callat - pipe");
-                close(fdw[0]);
-                close(fdw[1]);
                 exit(1);
         }
         switch (fork()) {
                 case -1:
                         perror("callat - fork");
-                        close(fdw[0]);
-                        close(fdw[1]);
-                        close(fdr[0]);
-                        close(fdr[1]);
                         exit(1);
                 case 0:
                         close(fdw[1]);
@@ -259,8 +253,6 @@ callat(time_t t, char *at[])
                         if (fdw[0] != STDIN_FILENO) {
                                 if (dup2(fdw[0], STDIN_FILENO) != STDIN_FILENO) {
                                         perror("callat - child - dup2");
-                                        close(fdw[0]);
-                                        close(fdr[1]);
                                         exit(1);
                                 }
                                 close(fdw[0]);
@@ -268,7 +260,6 @@ callat(time_t t, char *at[])
                         if (fdr[1] != STDOUT_FILENO) {
                                 if (dup2(fdr[1], STDOUT_FILENO) != STDOUT_FILENO) {
                                         perror("callat - child - dup2");
-                                        close(fdr[1]);
                                         exit(1);
                                 }
                                 close(fdr[1]);
@@ -294,8 +285,6 @@ callat(time_t t, char *at[])
 
                                 if ((fd = mkstemp(pidfile)) == -1) {
                                         perror("callat - mkstemp");
-                                        close(fdw[1]);
-                                        close(fdr[0]);
                                         exit(1);
                                 }
                                 close(fd);
@@ -316,7 +305,6 @@ callat(time_t t, char *at[])
 
                         if (!(stream = fdopen(fdr[0], "r"))) {
                                 perror("callat - fdopen");
-                                close(fdr[0]);
                                 exit(1);
                         }
                         if (!processatoutput(stream, t)) {
