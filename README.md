@@ -71,7 +71,7 @@ sudo make install
 
 If you want pending ntq alarms to be shown instantly after waking up from
 suspend, add an executable file with the following lines in
-`/usr/lib/systemd/system-sleep` -
+`/usr/lib/systemd/system-sleep/` -
 
 ```
 #!/bin/sh
