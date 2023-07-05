@@ -29,7 +29,7 @@ ntrm -a|-A|-l|-n|<id>
 
 ## time-specification
 
-* relative - `M[.M]` or `[H[.H]h][M[.M]m][Ss]`
+* relative - `M[.M][,S]` or `[H[.H]h][M[.M]m][Ss]`
 * absolute - `[HH]:[MM]`
 
 ## ntq
@@ -48,6 +48,7 @@ List pending notification alarms.
 
 ```
 nt 15 '15 minutes up'
+nt 8,30 '8 minutes 30 seconds up'
 nt 30s '30 seconds up'
 nt 4.5 '4.5 minutes up'
 nt .5h 'half an hour up'

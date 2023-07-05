@@ -15,10 +15,11 @@
         "	nt -a <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
-        "		relative - M[.M] or [H[.H]h][M[.M]m][Ss]\n" \
+        "		relative - M[.M][,S] or [H[.H]h][M[.M]m][Ss]\n" \
         "		absolute - [HH]:[MM]\n" \
         "Examples:\n" \
         "	nt 15 '15 minutes up'\n" \
+        "	nt 8,30 '8 minutes 30 seconds up'\n" \
         "	nt 30s '30 seconds up'\n" \
         "	nt 4.5 '4.5 minutes up'\n" \
         "	nt .5h 'half an hour up'\n" \
@@ -40,7 +41,7 @@
 #define AT(arg)                         (char *[]){ "at", "-M", arg, NULL }
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
 
-enum { None, Second, Minute, Hour }; /* last special token in time specification */
+enum { None, Cmma, Scnd, Mnte, Hour }; /* last special token in time specification */
 
 int
 getntmessage(void)
@@ -139,15 +140,16 @@ int
 parseduration(char *arg, unsigned int *t)
 {
         int last = None, period = 0;
-        unsigned int i = 0, f = 0, d = 1, c = 0;
+        unsigned int nbp = 0, nap = 0, scale = 1;
+        unsigned int s = 0;
 
         for (; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
                         if (period) {
-                                f = 10 * f + *arg - '0';
-                                d *= 10;
+                                nap = 10 * nap + (*arg - '0');
+                                scale *= 10;
                         } else
-                                i = 10 * i + *arg - '0';
+                                nbp = 10 * nbp + (*arg - '0');
                         continue;
                 }
                 switch (*arg) {
@@ -156,26 +158,35 @@ parseduration(char *arg, unsigned int *t)
                                         return 0;
                                 period = 1;
                                 break;
-                        case 'h':
+                        case ',':
                                 if (last != None)
                                         return 0;
-                                last = Hour;
-                                c = 60 * 60 * i + (60 * 60 * f) / d;
-                                i = 0, period = 0, f = 0;
+                                period = 0, last = Cmma;
+                                s += 60 * nbp + (60 * nap) / scale;
+                                nbp = 0, nap = 0;
+                                break;
+                        case 'h':
+                                if (last == Cmma || last != None)
+                                        return 0;
+                                period = 0, last = Hour;
+                                s += 60 * 60 * nbp + (60 * 60 * nap) / scale;
+                                nbp = 0, nap = 0;
                                 break;
                         case 'm':
-                                if (last != Hour && last != None)
+                                if (last == Cmma || last == Mnte || last == Scnd)
                                         return 0;
-                                last = Minute;
-                                c += 60 * i + (60 * f) / d;
-                                i = 0, period = 0, f = 0;
+                                period = 0, last = Mnte;
+                                s += 60 * nbp + (60 * nap) / scale;
+                                nbp = 0, nap = 0;
                                 break;
                         case 's':
-                                if (period || last == Second)
+                                if (last == Cmma || last == Scnd)
                                         return 0;
-                                last = Second;
-                                c += i;
-                                i = 0;
+                                if (period)
+                                        return 0;
+                                last = Scnd;
+                                s += nbp;
+                                nbp = 0;
                                 break;
                         default:
                                 return 0;
@@ -183,14 +194,19 @@ parseduration(char *arg, unsigned int *t)
         }
         switch (last) {
                 case None:
-                        c = 60 * i + (60 * f) / d;
+                        s = 60 * nbp + (60 * nap) / scale;
+                        break;
+                case Cmma:
+                        if (period)
+                                return 0;
+                        s += nbp;
                         break;
                 default:
-                        if (i || f)
+                        if (nbp || nap)
                                 return 0;
                         break;
         }
-        *t = c;
+        *t = s;
         return 1;
 }
 
