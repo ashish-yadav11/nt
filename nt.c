@@ -15,7 +15,7 @@
         "	nt -a <at-supported-time-specification>... [-m <notification-message>...]\n" \
         "\n" \
         "	time-specification:\n" \
-        "		relative - M[.M][,S] or [H[.H]h][M[.M]m][Ss]\n" \
+        "		relative - [M[.M]][,S] or [H[.H]h][M[.M]m][Ss]\n" \
         "		absolute - [HH]:[MM]\n" \
         "Examples:\n" \
         "	nt 15 '15 minutes up'\n" \

@@ -29,7 +29,7 @@ ntrm -a|-A|-l|-n|<id>
 
 ## time-specification
 
-* relative - `M[.M][,S]` or `[H[.H]h][M[.M]m][Ss]`
+* relative - `[M[.M]][,S]` or `[H[.H]h][M[.M]m][Ss]`
 * absolute - `[HH]:[MM]`
 
 ## ntq
