@@ -16,7 +16,7 @@
         "\n" \
         "	time-specification:\n" \
         "		relative - [M[.M]][,S] or [H[.H]h][M[.M]m][Ss]\n" \
-        "		absolute - [HH]:[MM]\n" \
+        "		absolute - [HH]:[MM][:[SS]]\n" \
         "Examples:\n" \
         "	nt 15 '15 minutes up'\n" \
         "	nt 8,30 '8 minutes 30 seconds up'\n" \
@@ -40,6 +40,7 @@
 
 #define AT(arg)                         (char *[]){ "at", "-M", arg, NULL }
 #define ISDIGIT(X)                      (X >= '0' && X <= '9')
+#define NUM(X)                          (X - '0')
 
 enum { None, Cmma, Scnd, Mnte, Hour }; /* last special token in time specification */
 
@@ -58,11 +59,12 @@ getntmessage(void)
                         free(ntm);
                         return 0;
                 }
-        } else
+        } else {
                 if ((n = getline(&ntm, &len, stdin) - 1) < 0) {
                         free(ntm);
                         return 0;
                 }
+        }
         if (ntm[n] == '\n')
                 ntm[n] = '\0';
         if (ntm[0] == '\0') {
@@ -100,39 +102,74 @@ catntmessage(int size, char *array[])
         return 1;
 }
 
-/* the following function assumes that t points to a buffer of length 5 */
 int
-parsetime(char *arg, char *colon, char *t)
+parsetimeduration(char *arg, char *cln1, time_t ct, unsigned int *t)
 {
-        switch (colon - arg) {
+        char *cln2;
+        time_t at;
+        struct tm *atm = localtime(&ct);
+
+        switch (cln1 - arg) {
                 case 0:
-                        t[0] = t[1] = '0';
+                        atm->tm_hour = 0;
                         break;
                 case 1:
                         if (!ISDIGIT(arg[0]))
                                 return 0;
-                        t[0] = '0', t[1] = arg[0];
+                        atm->tm_hour = NUM(arg[0]);
                         break;
                 case 2:
                         if (!ISDIGIT(arg[0]) || !ISDIGIT(arg[1]))
                                 return 0;
-                        t[0] = arg[0], t[1] = arg[1];
+                        atm->tm_hour = 10 * NUM(arg[0]) + NUM(arg[1]);
                         break;
                 default:
                         return 0;
         }
-        if (ISDIGIT(colon[1])) {
-                if (ISDIGIT(colon[2]))
-                        t[2] = colon[1], t[3] = colon[2];
-                else if (colon[2] == '\0')
-                        t[2] = '0', t[3] = colon[1];
-                else
+        if ((cln2 = strchr(cln1 + 1, ':'))) {
+                switch (strlen(cln2 + 1)) {
+                        case 0:
+                                atm->tm_sec = 0;
+                                break;
+                        case 1:
+                                if (!ISDIGIT(cln2[1]))
+                                        return 0;
+                                atm->tm_sec = NUM(cln2[1]);
+                                break;
+                        case 2:
+                                if (!ISDIGIT(cln2[1]) || !ISDIGIT(cln2[2]))
+                                        return 0;
+                                atm->tm_sec = 10 * NUM(cln2[1]) + NUM(cln2[2]);
+                                break;
+                        default:
+                                return 0;
+                }
+                *cln2 = '\0';
+        } else {
+                atm->tm_sec = 0;
+        }
+        switch (strlen(cln1 + 1)) {
+                case 0:
+                        atm->tm_min = 0;
+                        break;
+                case 1:
+                        if (!ISDIGIT(cln1[1]))
+                                return 0;
+                        atm->tm_min = NUM(cln1[1]);
+                        break;
+                case 2:
+                        if (!ISDIGIT(cln1[1]) || !ISDIGIT(cln1[2]))
+                                return 0;
+                        atm->tm_min = 10 * NUM(cln1[1]) + NUM(cln1[2]);
+                        break;
+                default:
                         return 0;
-        } else if (colon[1] == '\0')
-                t[2] = t[3] = '0';
-        else
-                return 0;
-        t[4] = '\0';
+        }
+
+        at = mktime(atm);
+        if (at < ct)
+                at += 24 * 60 * 60;
+        *t = at - ct;
         return 1;
 }
 
@@ -146,10 +183,10 @@ parseduration(char *arg, unsigned int *t)
         for (; *arg != '\0'; arg++) {
                 if (ISDIGIT(*arg)) {
                         if (period) {
-                                nap = 10 * nap + (*arg - '0');
+                                nap = 10 * nap + NUM(*arg);
                                 scale *= 10;
                         } else
-                                nbp = 10 * nbp + (*arg - '0');
+                                nbp = 10 * nbp + NUM(*arg);
                         continue;
                 }
                 switch (*arg) {
@@ -335,6 +372,7 @@ callat(time_t t, char *at[])
 int
 main(int argc, char *argv[])
 {
+        time_t ct;
         unsigned int t;
         char *c;
 
@@ -373,23 +411,24 @@ main(int argc, char *argv[])
                 return 2;
         }
         if ((c = strchr(argv[1], ':'))) {
-                char arg[5];
-
-                if (parsetime(argv[1], c, arg)) {
-                        callat(0, AT(arg));
-                        return 0;
-                }
-        } else if (parseduration(argv[1], &t)) {
-                if (t < 120)
-                        callat(time(NULL) + t, AT("now"));
-                else {
-                        char arg[23];
-
-                        snprintf(arg, sizeof arg, "now + %u minutes", t / 60 - 1);
-                        callat(time(NULL) + t, AT(arg));
-                }
-                return 0;
+                ct = time(NULL);
+                if (!parsetimeduration(argv[1], c, ct, &t))
+                        goto error;
+        } else {
+                if (!parseduration(argv[1], &t))
+                        goto error;
+                ct = time(NULL);
         }
+        if (t < 120)
+                callat(ct + t, AT("now"));
+        else {
+                char arg[32];
+
+                snprintf(arg, sizeof arg, "now + %u minutes", t / 60 - 1);
+                callat(ct + t, AT(arg));
+        }
+        return 0;
+error:
         fputs("nt: invalid time specification\n", stderr);
         return 2;
 }
